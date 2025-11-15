@@ -1,0 +1,30 @@
+Table School {
+	id int [pk, increment]
+	name char(100)
+}
+
+Table Grade {
+	id int [pk, autoincrement]
+	school_id int [ref: > School.id]
+	name char(100)
+}
+
+Table Student {
+	id int [pk, autoincrement]
+	grade_id int [ref: > Grade.id]
+	full_name char(200)
+}
+
+Table Attendance {
+	id int [pk, autoincrement]
+	student_id int [ref: > Student.id]
+	class_date date
+	is_present bool
+}
+
+Table Teacher {
+	id int [pk, autoincrement]
+	grade_id int [ref: > Grade.id]
+	full_name char(200)
+	password varchar(500)
+}

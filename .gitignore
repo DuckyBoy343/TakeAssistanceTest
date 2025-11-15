@@ -1,0 +1,29 @@
+# File: .gitignore
+
+# Personal secrets
+*.env
+
+# .NET / C#
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.dll
+*.pdb
+*.exe
+*.vsix
+*.cache
+*.vs
+
+# Build directories
+[Bb]in/
+[Oo]bj/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# IDE files
+.vscode/
+.vs/
+.idea/
