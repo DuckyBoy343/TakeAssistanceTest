@@ -1,135 +1,71 @@
--- File: init.sql
+-- Postgres automatically creates the DB 'AttendanceDb' based on the Env Var
 
--- Create the database if it doesn't exist
-IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'AttendanceDb')
+-- Create Tables
+CREATE TABLE IF NOT EXISTS Schools (
+    SchoolId SERIAL PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Grades (
+    GradeId SERIAL PRIMARY KEY,
+    SchoolId INT NOT NULL,
+    Name VARCHAR(50) NOT NULL,
+    FOREIGN KEY (SchoolId) REFERENCES Schools(SchoolId)
+);
+
+CREATE TABLE IF NOT EXISTS Students (
+    StudentId SERIAL PRIMARY KEY,
+    GradeId INT NOT NULL,
+    FullName VARCHAR(200) NOT NULL,
+    FOREIGN KEY (GradeId) REFERENCES Grades(GradeId)
+);
+
+CREATE TABLE IF NOT EXISTS Attendance (
+    AttendanceId SERIAL PRIMARY KEY,
+    StudentId INT NOT NULL,
+    ClassDate DATE NOT NULL,
+    IsPresent BOOLEAN NOT NULL,
+    FOREIGN KEY (StudentId) REFERENCES Students(StudentId)
+);
+
+-- Seed Data (using DO block to handle "if not exists" logic simply)
+
+INSERT INTO Schools (Name) VALUES ('Central High School') ON CONFLICT DO NOTHING;
+
+-- Note: For simple seeding, we assume IDs 1, 2, etc. for simplicity in this script
+-- Or we look them up. Here is a simple lookup approach:
+
+DO $$
+DECLARE 
+    v_SchoolId INT;
+    v_GradeA_Id INT;
+    v_GradeB_Id INT;
 BEGIN
-    CREATE DATABASE AttendanceDb;
-END
-GO
+    SELECT SchoolId INTO v_SchoolId FROM Schools WHERE Name = 'Central High School';
 
--- Switch to the new database context
-USE AttendanceDb;
-GO
+    -- Seed Grades
+    IF NOT EXISTS (SELECT 1 FROM Grades WHERE Name = '1°A' AND SchoolId = v_SchoolId) THEN
+        INSERT INTO Grades (SchoolId, Name) VALUES (v_SchoolId, '1°A') RETURNING GradeId INTO v_GradeA_Id;
+    ELSE
+        SELECT GradeId INTO v_GradeA_Id FROM Grades WHERE Name = '1°A';
+    END IF;
 
--- Create Schools table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Schools')
-BEGIN
-    CREATE TABLE Schools (
-        SchoolId INT PRIMARY KEY IDENTITY(1,1),
-        Name NVARCHAR(100) NOT NULL
-    );
-END
-GO
+    IF NOT EXISTS (SELECT 1 FROM Grades WHERE Name = '1°B' AND SchoolId = v_SchoolId) THEN
+        INSERT INTO Grades (SchoolId, Name) VALUES (v_SchoolId, '1°B') RETURNING GradeId INTO v_GradeB_Id;
+    ELSE
+         SELECT GradeId INTO v_GradeB_Id FROM Grades WHERE Name = '1°B';
+    END IF;
 
--- Create Grades table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Grades')
-BEGIN
-    CREATE TABLE Grades (
-        GradeId INT PRIMARY KEY IDENTITY(1,1),
-        SchoolId INT NOT NULL,
-        Name NVARCHAR(50) NOT NULL, -- e.g., "1°A", "2°B"
-        FOREIGN KEY (SchoolId) REFERENCES Schools(SchoolId)
-    );
-END
-GO
+    -- Seed Students
+    IF NOT EXISTS (SELECT 1 FROM Students WHERE FullName = 'Juan Perez') THEN
+        INSERT INTO Students (GradeId, FullName) VALUES (v_GradeA_Id, 'Juan Perez');
+    END IF;
 
--- Create Students table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Students')
-BEGIN
-    CREATE TABLE Students (
-        StudentId INT PRIMARY KEY IDENTITY(1,1),
-        GradeId INT NOT NULL,
-        FullName NVARCHAR(200) NOT NULL,
-        FOREIGN KEY (GradeId) REFERENCES Grades(GradeId)
-    );
-END
-GO
+    IF NOT EXISTS (SELECT 1 FROM Students WHERE FullName = 'Maria Lopez') THEN
+        INSERT INTO Students (GradeId, FullName) VALUES (v_GradeA_Id, 'Maria Lopez');
+    END IF;
 
--- Create Attendance table if it doesn't exist
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Attendance')
-BEGIN
-    CREATE TABLE Attendance (
-        AttendanceId INT PRIMARY KEY IDENTITY(1,1),
-        StudentId INT NOT NULL,
-        ClassDate DATE NOT NULL,
-        IsPresent BIT NOT NULL,
-        FOREIGN KEY (StudentId) REFERENCES Students(StudentId)
-    );
-END
-GO
-
---- SEED TEST DATA (Idempotent) ---
-
--- Seed a test school
-IF NOT EXISTS (SELECT 1 FROM Schools WHERE Name = 'Central High School')
-BEGIN
-    INSERT INTO Schools (Name) VALUES ('Central High School');
-END
-GO
-
--- Seed test grades
-DECLARE @SchoolId INT = (SELECT SchoolId FROM Schools WHERE Name = 'Central High School');
-
-IF NOT EXISTS (SELECT 1 FROM Grades WHERE Name = '1°A' AND SchoolId = @SchoolId)
-BEGIN
-    INSERT INTO Grades (SchoolId, Name) VALUES (@SchoolId, '1°A');
-END
-GO
-
-IF NOT EXISTS (SELECT 1 FROM Grades WHERE Name = '1°B' AND SchoolId = @SchoolId)
-BEGIN
-    INSERT INTO Grades (SchoolId, Name) VALUES (@SchoolId, '1°B');
-END
-GO
-
--- Seed test students
-DECLARE @GradeA INT = (SELECT GradeId FROM Grades WHERE Name = '1°A');
-DECLARE @GradeB INT = (SELECT GradeId FROM Grades WHERE Name = '1°B');
-
-IF NOT EXISTS (SELECT 1 FROM Students WHERE FullName = 'Juan Perez')
-BEGIN
-    INSERT INTO Students (GradeId, FullName) VALUES (@GradeA, 'Juan Perez');
-END
-GO
-
-IF NOT EXISTS (SELECT 1 FROM Students WHERE FullName = 'Maria Lopez')
-BEGIN
-    INSERT INTO Students (GradeId, FullName) VALUES (@GradeA, 'Maria Lopez');
-END
-GO
-
-IF NOT EXISTS (SELECT 1 FROM Students WHERE FullName = 'Carlos Sanchez')
-BEGIN
-    INSERT INTO Students (GradeId, FullName) VALUES (@GradeB, 'Carlos Sanchez');
-END
-GO
-IF NOT EXISTS (SELECT 1 FROM Grades WHERE Name = '1°A' AND SchoolId = @SchoolId)
-BEGIN
-    INSERT INTO Grades (SchoolId, Name) VALUES (@SchoolId, '1°A');
-END
-
-IF NOT EXISTS (SELECT 1 FROM Grades WHERE Name = '1°B' AND SchoolId = @SchoolId)
-BEGIN
-    INSERT INTO Grades (SchoolId, Name) VALUES (@SchoolId, '1°B');
-END
-GO
-
--- Seed test students
-DECLARE @GradeA INT = (SELECT GradeId FROM Grades WHERE Name = '1°A');
-DECLARE @GradeB INT = (SELECT GradeId FROM Grades WHERE Name = '1°B');
-
-IF NOT EXISTS (SELECT 1 FROM Students WHERE FullName = 'Juan Perez')
-BEGIN
-    INSERT INTO Students (GradeId, FullName) VALUES (@GradeA, 'Juan Perez');
-END
-
-IF NOT EXISTS (SELECT 1 FROM Students WHERE FullName = 'Maria Lopez')
-BEGIN
-    INSERT INTO Students (GradeId, FullName) VALUES (@GradeA, 'Maria Lopez');
-END
-
-IF NOT EXISTS (SELECT 1 FROM Students WHERE FullName = 'Carlos Sanchez')
-BEGIN
-    INSERT INTO Students (GradeId, FullName) VALUES (@GradeB, 'Carlos Sanchez');
-END
-GO
+    IF NOT EXISTS (SELECT 1 FROM Students WHERE FullName = 'Carlos Sanchez') THEN
+        INSERT INTO Students (GradeId, FullName) VALUES (v_GradeB_Id, 'Carlos Sanchez');
+    END IF;
+END $$;

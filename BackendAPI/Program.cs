@@ -1,3 +1,5 @@
+using Npgsql;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddScoped<System.Data.IDbConnection>(sp =>
-    new Microsoft.Data.SqlClient.SqlConnection(connectionString)
+    new NpgsqlConnection(connectionString)
 );
 
 builder.Services.AddControllers();
@@ -23,8 +25,6 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-
-    await DatabaseInitializer.InitializeDatabase(app);
 }
 
 app.UseHttpsRedirection();
