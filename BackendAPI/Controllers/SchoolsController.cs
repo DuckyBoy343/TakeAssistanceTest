@@ -13,6 +13,14 @@ namespace BackendAPI.Controllers
         {
             _mediator = mediator;
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllSchools()
+        {
+            var query = new GetAllSchoolsQuery();
+            var schools = await _mediator.Send(query);
+            return Ok(schools);
+        }
     
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetSchoolById(int id)

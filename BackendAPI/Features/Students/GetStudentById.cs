@@ -18,7 +18,7 @@ namespace BackendAPI.Features.Students
             _db = db;
         }
 
-        public async Task<Student> Handle(GetStudentByIdQuery request, CancellationToken cancellationToken)
+        public async Task<Student?> Handle(GetStudentByIdQuery request, CancellationToken cancellationToken)
         {
             var sql = "SELECT * FROM Students WHERE StudentId = @Id";
 
