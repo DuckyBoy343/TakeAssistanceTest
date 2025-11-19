@@ -24,5 +24,6 @@ namespace BackendAPI.Features.Students
 
             return await _db.QueryFirstOrDefaultAsync<Student>(sql, new { request.Id });
         }
+
     }
 }
