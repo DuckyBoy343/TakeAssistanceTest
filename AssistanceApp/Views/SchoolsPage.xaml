@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AssistanceApp.ViewModels"
+             xmlns:models="clr-namespace:AssistanceApp.Models"
+             xmlns:Toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="AssistanceApp.Views.SchoolsPage"
+             x:DataType="vm:SchoolsViewModel"
+             Title="Select School">
+
+    <Grid RowDefinitions="Auto, *">
+
+        <Button Grid.Row="0" 
+                Text="Sync / Refresh"
+                Command="{Binding InitDataCommand}"
+                Margin="10"
+                BackgroundColor="Blue"
+                TextColor="White"
+                HeightRequest="50"/>
+
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Schools}"
+                        SelectionMode="Single">
+
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="2" VerticalItemSpacing="10" HorizontalItemSpacing="10" />
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:School">
+                    <Border StrokeShape="RoundRectangle 10" Padding="20" HeightRequest="150" BackgroundColor="WhiteSmoke">
+                        <VerticalStackLayout VerticalOptions="Center" Spacing="10">
+                            <Label Text="🏫" FontSize="40" HorizontalOptions="Center"/>
+                            <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.RowSpan="2"
+              IsVisible="{Binding IsBusy}" 
+              BackgroundColor="#80000000">
+
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                <ActivityIndicator IsRunning="{Binding IsBusy}" Color="White" />
+                <Label Text="{Binding StatusMessage}" TextColor="White" FontAttributes="Bold"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</ContentPage>

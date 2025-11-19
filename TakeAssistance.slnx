@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="AssistanceApp/AssistanceApp.csproj" Id="13840e64-2712-46ed-a129-e14778fb840d">
+    <Deploy />
+  </Project>
   <Project Path="BackendAPI/BackendAPI.csproj" />
 </Solution>
