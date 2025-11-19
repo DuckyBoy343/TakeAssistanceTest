@@ -4,7 +4,7 @@ using System.Text.Json;
 public class RestService
 {
     private readonly HttpClient _client;
-    private const string BaseUrl = "https://tool-creator-childhood-scenarios.trycloudflare.com/api";
+    private const string BaseUrl = "https://subsidiaries-plains-horn-ball.trycloudflare.com/api";
 
     private readonly JsonSerializerOptions _options;
 
@@ -22,9 +22,6 @@ public class RestService
         try
         {
             var json = await _client.GetStringAsync($"{BaseUrl}/School");
-
-            Console.WriteLine($"DEBUG API RAW: {json}"); // <--- SEE WHAT WE GOT
-
             var schools = JsonSerializer.Deserialize<List<School>>(json, _options);
             return schools ?? new List<School>();
         }

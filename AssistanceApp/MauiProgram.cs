@@ -26,6 +26,8 @@ namespace AssistanceApp
             builder.Services.AddTransient<SchoolsViewModel>();
 
             builder.Services.AddTransient<SchoolsPage>();
+            builder.Services.AddTransient<AttendanceViewModel>();
+            builder.Services.AddTransient<AttendancePage>();
 
 #if DEBUG
             builder.Logging.AddDebug();

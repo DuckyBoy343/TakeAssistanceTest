@@ -19,7 +19,9 @@ public class LocalDatabaseService
         _db = new SQLiteAsyncConnection(dbPath);
 
         await _db.CreateTableAsync<Student>();
+        await _db.CreateTableAsync<Grade>();
         await _db.CreateTableAsync<School>();
+        await _db.CreateTableAsync<Attendance>();
     }
 
     public async Task SyncStudentsAsync(List<Student> serverStudents)
@@ -28,7 +30,22 @@ public class LocalDatabaseService
 
         if (serverStudents.Count == 0) return;
 
-        await _db.InsertOrReplaceAsync(serverStudents);
+        await _db.RunInTransactionAsync(trans =>
+        {
+            foreach (var student in serverStudents)
+            {
+                trans.InsertOrReplace(student);
+            }
+        });
+    }
+
+    public async Task SyncGradesAsync(List<Grade> remoteGrades)
+    {
+        await Init();
+        await _db.RunInTransactionAsync(trans =>
+        {
+            foreach (var g in remoteGrades) trans.InsertOrReplace(g);
+        });
     }
 
     public async Task SyncSchoolsAsync(List<School> serverSchools)
@@ -56,5 +73,57 @@ public class LocalDatabaseService
     {
         await Init();
         return await _db.Table<School>().ToListAsync();
+    }
+
+    public async Task<List<Grade>> GetGradesBySchoolAsync(int schoolId)
+    {
+        await Init();
+        return await _db.Table<Grade>()
+                        .Where(g => g.SchoolId == schoolId)
+                        .ToListAsync();
+    }
+
+    public async Task<List<Student>> GetStudentsByGradeAsync(int gradeId)
+    {
+        await Init();
+        return await _db.Table<Student>()
+                        .Where(s => s.GradeId == gradeId)
+                        .ToListAsync();
+    }
+
+    public async Task SaveAttendanceBatchAsync(List<Attendance> records)
+    {
+        await Init();
+        await _db.RunInTransactionAsync(trans =>
+        {
+            foreach (var record in records)
+            {
+                // Logic: If we already took attendance for this student on this day, update it.
+                // Otherwise, insert new.
+                // Note: This requires a complex query or a composite unique key.
+                // For MVP Demo: Just Insert (or InsertOrReplace if you set PK correctly)
+
+                trans.Insert(record);
+            }
+        });
+    }
+
+    public async Task<List<Student>> GetStudentsForDemoAsync()
+    {
+        await Init();
+
+        // Step A: Try to find ANY grade
+        var firstGrade = await _db.Table<Grade>().FirstOrDefaultAsync();
+
+        if (firstGrade != null)
+        {
+            // If we have grades, return students for that grade
+            return await _db.Table<Student>()
+                            .Where(s => s.GradeId == firstGrade.GradeId)
+                            .ToListAsync();
+        }
+
+        // Step B: If no grades exist yet, just return ALL students (Fail-safe)
+        return await _db.Table<Student>().ToListAsync();
     }
 }

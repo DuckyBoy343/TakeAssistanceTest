@@ -31,6 +31,8 @@ namespace AssistanceApp.ViewModels
         {
             var cachedSchools = await _db.GetLocalSchoolsAsync();
 
+            var cachedStudents = await _db.GetLocalStudentsAsync();
+
             if (cachedSchools.Count > 0)
             {
                 MainThread.BeginInvokeOnMainThread(() =>
